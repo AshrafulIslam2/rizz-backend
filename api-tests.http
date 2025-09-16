@@ -1,0 +1,107 @@
+### Authentication
+
+# Register a new user
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "name": "John Doe",
+  "password": "password123"
+}
+
+###
+
+# Login user
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+###
+
+### Users
+
+# Get all users
+GET http://localhost:3000/users
+
+###
+
+# Get user by ID
+GET http://localhost:3000/users/1
+
+###
+
+# Update user (requires authentication)
+PATCH http://localhost:3000/users/1
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "name": "John Smith"
+}
+
+###
+
+# Delete user (requires authentication)
+DELETE http://localhost:3000/users/1
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+###
+
+### Posts
+
+# Get all posts
+GET http://localhost:3000/posts
+
+###
+
+# Get published posts only
+GET http://localhost:3000/posts?published=true
+
+###
+
+# Get posts by author
+GET http://localhost:3000/posts?authorId=1
+
+###
+
+# Get post by ID
+GET http://localhost:3000/posts/1
+
+###
+
+# Create a new post (requires authentication)
+POST http://localhost:3000/posts
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "title": "My First Post",
+  "content": "This is the content of my first post.",
+  "published": true,
+  "authorId": 1
+}
+
+###
+
+# Update post (requires authentication)
+PATCH http://localhost:3000/posts/1
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "title": "Updated Post Title",
+  "published": false
+}
+
+###
+
+# Delete post (requires authentication)
+DELETE http://localhost:3000/posts/1
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+###
