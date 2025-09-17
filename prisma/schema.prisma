@@ -159,13 +159,10 @@ model product_size {
   productId Int
   sizeId    Int
   quantity  Int      @default(0)
-  // Keep product-specific attributes here (optional)
-  // dimensions String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  product product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  size    Size    @relation(fields: [sizeId], references: [id], onDelete: Cascade)
+  product   product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size      Size     @relation(fields: [sizeId], references: [id], onDelete: Cascade)
 
   @@id([productId, sizeId])
   @@map("product_size")

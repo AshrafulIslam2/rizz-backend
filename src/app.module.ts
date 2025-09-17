@@ -8,6 +8,9 @@ import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { SizesModule } from './sizes/sizes.module';
+import { ProductSizesModule } from './product-sizes/product-sizes.module';
+import { CategoriesModule } from './categories/categories.module';
+import { ProductCategoriesModule } from './product-categories/product-categories.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { SizesModule } from './sizes/sizes.module';
     PostsModule,
     ProductsModule,
     SizesModule,
+    ProductSizesModule,
+    CategoriesModule,
+    ProductCategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
