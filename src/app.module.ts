@@ -11,6 +11,7 @@ import { SizesModule } from './sizes/sizes.module';
 import { ProductSizesModule } from './product-sizes/product-sizes.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductCategoriesModule } from './product-categories/product-categories.module';
+import { ColorsModule } from './colors/colors.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ProductCategoriesModule } from './product-categories/product-categories
     ProductSizesModule,
     CategoriesModule,
     ProductCategoriesModule,
+    ColorsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -111,24 +111,35 @@ export class ProductSizesService {
             },
         });
 
-        if (existingProductSizes.length > 0) {
+        const existingSizeIds = existingProductSizes.map(ps => ps.sizeId);
+        const newSizes = sizes.filter(s => !existingSizeIds.includes(s.sizeId));
+
+        // If all sizes are already associated, throw error
+        if (newSizes.length === 0) {
             const existingSizeValues = existingProductSizes.map(ps => ps.size.value);
             throw new ConflictException(
-                `Sizes [${existingSizeValues.join(', ')}] are already associated with this product`
+                `All selected sizes [${existingSizeValues.join(', ')}] are already associated with this product`
             );
         }
 
-        // Create all associations
-        const createData = sizes.map(s => ({
+        // Create associations only for new sizes
+        const createData = newSizes.map(s => ({
             productId,
             sizeId: s.sizeId,
             quantity: s.quantity || 0,
         }));
 
         try {
-            return await this.prisma.product_size.createMany({
+            const result = await this.prisma.product_size.createMany({
                 data: createData,
             });
+
+            return {
+                ...result,
+                skipped: existingSizeIds.length,
+                added: result.count,
+                message: `Successfully added ${result.count} new sizes. Skipped ${existingSizeIds.length} already associated sizes.`
+            };
         } catch (error) {
             throw new BadRequestException('Failed to add sizes to product');
         }

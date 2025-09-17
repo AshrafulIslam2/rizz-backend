@@ -41,19 +41,22 @@ export class ProductCategoriesService {
             },
         });
 
-        if (existingProductCategories.length > 0) {
-            const existingCategoryIds = existingProductCategories.map(pc => pc.categoryId);
+        const existingCategoryIds = existingProductCategories.map(pc => pc.categoryId);
+        const newCategoryIds = selectedCategories.filter(id => !existingCategoryIds.includes(id));
+
+        // If all categories are already associated, throw error
+        if (newCategoryIds.length === 0) {
             const existingCategoryNames = categories
                 .filter(c => existingCategoryIds.includes(c.id))
                 .map(c => c.name);
             throw new ConflictException(
-                `Product "${product.title}" is already associated with categories: ${existingCategoryNames.join(', ')}`
+                `Product "${product.title}" is already associated with all selected categories: ${existingCategoryNames.join(', ')}`
             );
         }
 
         try {
-            // Create all associations
-            const createData = selectedCategories.map(categoryId => ({
+            // Create associations only for new categories
+            const createData = newCategoryIds.map(categoryId => ({
                 productId,
                 categoryId,
             }));
@@ -66,7 +69,7 @@ export class ProductCategoriesService {
             const result = await this.prisma.productCategory.findMany({
                 where: {
                     productId,
-                    categoryId: { in: selectedCategories },
+                    categoryId: { in: newCategoryIds },
                 },
                 include: {
                     product: {
@@ -85,9 +88,21 @@ export class ProductCategoriesService {
                 },
             });
 
+            // Prepare message with details about what was added and what was skipped
+            let message = `Successfully added ${createdAssociations.count} categories to product`;
+
+            if (existingCategoryIds.length > 0) {
+                const skippedCategoryNames = categories
+                    .filter(c => existingCategoryIds.includes(c.id))
+                    .map(c => c.name);
+                message += `. Skipped ${existingCategoryIds.length} already associated categories: ${skippedCategoryNames.join(', ')}`;
+            }
+
             return {
-                message: `Successfully added ${createdAssociations.count} categories to product`,
+                message,
                 associations: result,
+                skipped: existingCategoryIds.length,
+                added: createdAssociations.count,
             };
         } catch (error) {
             throw new BadRequestException('Failed to add categories to product');
@@ -128,23 +143,34 @@ export class ProductCategoriesService {
             },
         });
 
-        if (existingProductCategories.length > 0) {
+        const existingCategoryIds = existingProductCategories.map(pc => pc.categoryId);
+        const newCategoryIds = categoryIds.filter(id => !existingCategoryIds.includes(id));
+
+        // If all categories are already associated, throw error
+        if (newCategoryIds.length === 0) {
             const existingCategoryNames = existingProductCategories.map(pc => pc.category.name);
             throw new ConflictException(
-                `Categories [${existingCategoryNames.join(', ')}] are already associated with this product`
+                `All selected categories [${existingCategoryNames.join(', ')}] are already associated with this product`
             );
         }
 
-        // Create all associations
-        const createData = categoryIds.map(categoryId => ({
+        // Create associations only for new categories
+        const createData = newCategoryIds.map(categoryId => ({
             productId,
             categoryId,
         }));
 
         try {
-            return await this.prisma.productCategory.createMany({
+            const result = await this.prisma.productCategory.createMany({
                 data: createData,
             });
+
+            return {
+                ...result,
+                skipped: existingCategoryIds.length,
+                added: result.count,
+                message: `Successfully added ${result.count} new categories. Skipped ${existingCategoryIds.length} already associated categories.`
+            };
         } catch (error) {
             throw new BadRequestException('Failed to add categories to product');
         }
