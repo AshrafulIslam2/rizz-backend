@@ -89,12 +89,13 @@ model product {
 // }
 // NEW: shared colors table
 model Color {
-  id        Int              @id @default(autoincrement())
-  name      String
-  hexCode   String?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  products  product_colors[]
+  id            Int               @id @default(autoincrement())
+  name          String
+  hexCode       String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  products      product_colors[]
+  pricing_rules product_pricing[] // NEW: relation to pricing rules
 
   @@unique([name, hexCode])
   @@map("colors")
@@ -128,28 +129,49 @@ model product_tags {
 }
 
 model product_pricing {
-  id                  Int      @id @default(autoincrement())
-  productId           Int
-  min_quantity        Int
-  max_quantity        Int
-  unit_price          Float
-  
-  discount_percentage Float?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  product             product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id        Int @id @default(autoincrement())
+  productId Int
 
+  // Variant-specific pricing (optional - for color+size combinations)
+  colorId Int? // Optional: specific color
+  sizeId  Int? // Optional: specific size
+
+  // Quantity-based pricing tiers
+  min_quantity        Int    @default(1)
+  max_quantity        Int? // NULL means unlimited/no upper limit
+  unit_price          Float
+  discount_percentage Float?
+
+  // Rule metadata
+  rule_name String? // e.g., "Bulk Discount", "VIP Pricing", "Black 41 Special"
+  rule_type String  @default("STANDARD") // STANDARD, BULK, VARIANT, VIP, etc.
+  is_active Boolean @default(true)
+  priority  Int     @default(1) // Higher number = higher priority
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  product product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color   Color?  @relation(fields: [colorId], references: [id], onDelete: SetNull)
+  size    Size?   @relation(fields: [sizeId], references: [id], onDelete: SetNull)
+
+  // Ensure no duplicate rules for same product+variant+quantity range
+  @@unique([productId, colorId, sizeId, min_quantity])
+  @@index([productId, rule_type, is_active])
+  @@index([productId, colorId, sizeId])
   @@map("product_pricing")
 }
 
 // NEW: shared sizes table
 model Size {
-  id        Int            @id @default(autoincrement())
-  value     String // e.g., "42", "M", "10.5"
-  system    String? // e.g., "EU", "US", "UK" (optional)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  products  product_size[]
+  id            Int               @id @default(autoincrement())
+  value         String // e.g., "42", "M", "10.5"
+  system        String? // e.g., "EU", "US", "UK" (optional)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  products      product_size[]
+  pricing_rules product_pricing[] // NEW: relation to pricing rules
 
   @@unique([value, system])
   @@map("sizes")

@@ -13,6 +13,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { ProductCategoriesModule } from './product-categories/product-categories.module';
 import { ColorsModule } from './colors/colors.module';
 import { ProductColorsModule } from './product-colors/product-colors.module';
+import { ProductPricingModule } from './product-pricing/product-pricing.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ProductColorsModule } from './product-colors/product-colors.module';
     ProductCategoriesModule,
     ColorsModule,
     ProductColorsModule,
+    ProductPricingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
