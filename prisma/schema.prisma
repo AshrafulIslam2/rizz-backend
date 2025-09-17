@@ -133,6 +133,7 @@ model product_pricing {
   min_quantity        Int
   max_quantity        Int
   unit_price          Float
+  
   discount_percentage Float?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
