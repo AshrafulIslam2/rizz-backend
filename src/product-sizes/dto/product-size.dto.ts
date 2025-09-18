@@ -23,18 +23,11 @@ export class AddSizeToProductDto {
     @IsNumber()
     @IsNotEmpty()
     sizeId: number;
-
-    @IsNumber()
-    @IsOptional()
-    @Min(0)
-    quantity?: number;
 }
 
 export class UpdateProductSizeDto {
-    @IsNumber()
-    @IsOptional()
-    @Min(0)
-    quantity?: number;
+    // No fields needed since product_size is just a join table
+    // Quantity management is now handled by product_quantity table
 }
 
 export class BulkAddSizesToProductDto {

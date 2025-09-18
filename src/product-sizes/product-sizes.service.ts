@@ -12,7 +12,7 @@ export class ProductSizesService {
     constructor(private prisma: PrismaService) { }
 
     async addSizeToProduct(addSizeToProductDto: AddSizeToProductDto) {
-        const { productId, sizeId, quantity = 0 } = addSizeToProductDto;
+        const { productId, sizeId } = addSizeToProductDto;
 
         // Check if product exists
         const product = await this.prisma.product.findUnique({
@@ -51,7 +51,7 @@ export class ProductSizesService {
                 data: {
                     productId,
                     sizeId,
-                    quantity,
+                    // quantity,
                 },
                 include: {
                     product: {
@@ -187,31 +187,9 @@ export class ProductSizesService {
             );
         }
 
-        return this.prisma.product_size.update({
-            where: {
-                productId_sizeId: {
-                    productId,
-                    sizeId,
-                },
-            },
-            data: updateProductSizeDto,
-            include: {
-                product: {
-                    select: {
-                        id: true,
-                        title: true,
-                        sku: true,
-                    },
-                },
-                size: {
-                    select: {
-                        id: true,
-                        value: true,
-                        system: true,
-                    },
-                },
-            },
-        });
+        // Since product_size is just a join table with no updateable fields,
+        // we just return the existing association
+        return productSize;
     }
 
     async removeSizeFromProduct(removeSizeFromProductDto: RemoveSizeFromProductDto) {

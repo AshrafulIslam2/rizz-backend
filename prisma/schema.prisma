@@ -41,34 +41,35 @@ model Post {
 }
 
 model product {
-  id                 Int               @id @default(autoincrement())
+  id                 Int                @id @default(autoincrement())
   title              String
   subtitle           String?
   description        String?
   basePrice          Float
   discountedPrice    Float?
-  isFeatured         Boolean           @default(false)
-  isNewArrival       Boolean           @default(false)
-  isOnSale           Boolean           @default(false)
-  isExclusive        Boolean           @default(false)
-  isLimitedEdition   Boolean           @default(false)
-  isBestSeller       Boolean           @default(false)
-  isTrending         Boolean           @default(false)
-  isHot              Boolean           @default(false)
-  isPublished        Boolean           @default(false)
-  sku                String            @unique
+  isFeatured         Boolean            @default(false)
+  isNewArrival       Boolean            @default(false)
+  isOnSale           Boolean            @default(false)
+  isExclusive        Boolean            @default(false)
+  isLimitedEdition   Boolean            @default(false)
+  isBestSeller       Boolean            @default(false)
+  isTrending         Boolean            @default(false)
+  isHot              Boolean            @default(false)
+  isPublished        Boolean            @default(false)
+  sku                String             @unique
   discountPercentage Float?
   material           String?
   dimensions         String?
   capacity           String?
   // stock              Int               @default(0)
-  barcode            String?           @unique
+  barcode            String?            @unique
   weight             String?
-  published          Boolean           @default(false)
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  published          Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
   product_colors     product_colors[]
   product_pricing    product_pricing[]
+  product_quantity   product_quantity[]
   product_size       product_size[]
   product_feature    product_feature[]
   product_categories ProductCategory[] // NEW: many-to-many with categories
@@ -89,13 +90,14 @@ model product {
 // }
 // NEW: shared colors table
 model Color {
-  id            Int               @id @default(autoincrement())
-  name          String
-  hexCode       String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  products      product_colors[]
-  pricing_rules product_pricing[] // NEW: relation to pricing rules
+  id             Int                @id @default(autoincrement())
+  name           String
+  hexCode        String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  products       product_colors[]
+  pricing_rules  product_pricing[] // NEW: relation to pricing rules
+  quantity_rules product_quantity[] // NEW: relation to quantity rules
 
   @@unique([name, hexCode])
   @@map("colors")
@@ -163,15 +165,49 @@ model product_pricing {
   @@map("product_pricing")
 }
 
+model product_quantity {
+  id        Int @id @default(autoincrement())
+  productId Int
+
+  // Variant-specific quantity (optional - for color+size combinations)
+  colorId Int? // Optional: specific color
+  sizeId  Int? // Optional: specific size
+
+  // Quantity information
+  available_quantity Int  @default(0)
+  reserved_quantity  Int  @default(0) // For orders in progress
+  minimum_threshold  Int  @default(0) // Alert when stock is low
+  maximum_capacity   Int? // NULL means no limit
+
+  // Metadata
+  is_active Boolean @default(true)
+  notes     String? // Additional information about this variant
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  product product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color   Color?  @relation(fields: [colorId], references: [id], onDelete: SetNull)
+  size    Size?   @relation(fields: [sizeId], references: [id], onDelete: SetNull)
+
+  // Ensure no duplicate quantity records for same product+variant
+  @@unique([productId, colorId, sizeId])
+  @@index([productId, is_active])
+  @@index([productId, colorId, sizeId])
+  @@map("product_quantity")
+}
+
 // NEW: shared sizes table
 model Size {
-  id            Int               @id @default(autoincrement())
-  value         String // e.g., "42", "M", "10.5"
-  system        String? // e.g., "EU", "US", "UK" (optional)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  products      product_size[]
-  pricing_rules product_pricing[] // NEW: relation to pricing rules
+  id             Int                @id @default(autoincrement())
+  value          String // e.g., "42", "M", "10.5"
+  system         String? // e.g., "EU", "US", "UK" (optional)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  products       product_size[]
+  pricing_rules  product_pricing[] // NEW: relation to pricing rules
+  quantity_rules product_quantity[] // NEW: relation to quantity rules
 
   @@unique([value, system])
   @@map("sizes")
