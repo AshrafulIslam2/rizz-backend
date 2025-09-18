@@ -13,11 +13,6 @@ class SizeQuantityDto {
     @IsNumber()
     @IsNotEmpty()
     sizeId: number;
-
-    @IsNumber()
-    @IsOptional()
-    @Min(0)
-    quantity?: number;
 }
 
 export class AddSizeToProductDto {

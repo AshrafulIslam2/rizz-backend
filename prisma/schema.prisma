@@ -181,7 +181,7 @@ model Size {
 model product_size {
   productId Int
   sizeId    Int
-  quantity  Int      @default(0)
+  // quantity  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   product   product  @relation(fields: [productId], references: [id], onDelete: Cascade)

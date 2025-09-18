@@ -126,7 +126,7 @@ export class ProductSizesService {
         const createData = newSizes.map(s => ({
             productId,
             sizeId: s.sizeId,
-            quantity: s.quantity || 0,
+            // quantity: s.quantity || 0,
         }));
 
         try {
