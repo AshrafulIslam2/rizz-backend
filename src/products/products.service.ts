@@ -39,6 +39,7 @@ export class ProductsService {
                         color: true,
                     },
                 },
+                product_quantity: true,
                 product_pricing: true,
                 product_size: {
                     include: {
@@ -68,6 +69,7 @@ export class ProductsService {
                     },
                 },
                 product_pricing: true,
+                product_quantity: true,
                 product_size: {
                     include: {
                         size: true,
