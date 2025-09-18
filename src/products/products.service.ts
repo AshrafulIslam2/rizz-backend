@@ -39,8 +39,18 @@ export class ProductsService {
                         color: true,
                     },
                 },
-                product_quantity: true,
-                product_pricing: true,
+                product_quantity: {
+                    include: {
+                        color: true,
+                        size: true,
+                    }
+                },
+                product_pricing: {
+                    include: {
+                        color: true,
+                        size: true,
+                    }
+                },
                 product_size: {
                     include: {
                         size: true,
