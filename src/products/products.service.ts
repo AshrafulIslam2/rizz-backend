@@ -15,6 +15,20 @@ export class ProductsService {
                         color: true,
                     },
                 },
+                product_image: {
+                    select: {
+                        id: true,
+                        url: true,
+                        alt: true,
+                        level: true,
+                        position: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    },
+                    orderBy: {
+                        position: 'asc',
+                    },
+                },
                 product_pricing: true,
                 product_size: {
                     include: {
@@ -37,6 +51,20 @@ export class ProductsService {
                 product_colors: {
                     include: {
                         color: true,
+                    },
+                },
+                product_image: {
+                    select: {
+                        id: true,
+                        url: true,
+                        alt: true,
+                        level: true,
+                        position: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    },
+                    orderBy: {
+                        position: 'asc',
                     },
                 },
                 product_quantity: {
@@ -78,6 +106,20 @@ export class ProductsService {
                         color: true,
                     },
                 },
+                product_image: {
+                    select: {
+                        id: true,
+                        url: true,
+                        alt: true,
+                        level: true,
+                        position: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    },
+                    orderBy: {
+                        position: 'asc',
+                    },
+                },
                 product_pricing: true,
                 product_quantity: true,
                 product_size: {
@@ -117,6 +159,20 @@ export class ProductsService {
                 product_colors: {
                     include: {
                         color: true,
+                    },
+                },
+                product_image: {
+                    select: {
+                        id: true,
+                        url: true,
+                        alt: true,
+                        level: true,
+                        position: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    },
+                    orderBy: {
+                        position: 'asc',
                     },
                 },
                 product_pricing: true,

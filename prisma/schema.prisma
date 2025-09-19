@@ -75,6 +75,7 @@ model product {
   product_categories ProductCategory[] // NEW: many-to-many with categories
   medias             ProductMedia[]
   product_tags       product_tags[]
+  product_image      product_image[]
 
   @@map("products")
 }
@@ -117,6 +118,22 @@ model product_colors {
 
   @@id([productId, colorId])
   @@map("product_colors")
+}
+
+model product_image {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  url       String
+  alt       String?
+  position  Int? // ordering
+  level     String? // e.g., "thumbnail", "gallery", "detail"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_images")
 }
 
 model product_tags {

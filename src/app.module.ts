@@ -15,6 +15,7 @@ import { ColorsModule } from './colors/colors.module';
 import { ProductColorsModule } from './product-colors/product-colors.module';
 import { ProductPricingModule } from './product-pricing/product-pricing.module';
 import { ProductQuantitiesModule } from './product-quantities/product-quantities.module';
+import { ProductImagesModule } from './product-images/product-images.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ProductQuantitiesModule } from './product-quantities/product-quantities
     ProductColorsModule,
     ProductPricingModule,
     ProductQuantitiesModule,
+    ProductImagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
