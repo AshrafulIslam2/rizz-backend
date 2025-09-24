@@ -1,0 +1,326 @@
+### E-Commerce Dedicated YouTube Channel - OAuth Flow Test
+
+## Step 1: Start YouTube OAuth Flow (Admin/Backend Connection)
+### Frontend "Connect YouTube" button calls this to connect your e-commerce channel
+GET http://localhost:3008/youtube/oauth/start
+
+### This will redirect to Google OAuth consent screen
+### Grant permissions to upload videos to your dedicated e-commerce channel
+
+## Step 2: Check YouTube Connection Status  
+GET http://localhost:3008/youtube/oauth/status
+
+### Expected Response when connected:
+### {
+###   "connected": true,
+###   "channelName": "Your E-commerce Channel Name",
+###   "message": "YouTube channel is connected"
+### }
+
+## Step 3: Disconnect YouTube (if needed)
+POST http://localhost:3008/youtube/oauth/disconnect
+
+## Step 4: Create Product for Video Upload
+POST http://localhost:3008/products
+Content-Type: application/json
+
+{
+  "title": "Premium Leather Jacket",
+  "subtitle": "Handcrafted genuine leather",
+  "description": "Premium quality leather jacket made from genuine cowhide leather. Perfect for winter and style.",
+  "basePrice": 299.99,
+  "discountedPrice": 249.99,
+  "sku": "LEATHER-JACKET-001",
+  "published": true,
+  "isPublished": true
+}
+
+## Step 5: Upload Product Video (Channel must be connected first)
+POST http://localhost:3008/product-videos
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="productId"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="title"
+
+Premium Leather Jacket - Product Demo | Your E-commerce Store
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="description"
+
+Check out this amazing premium leather jacket! 
+
+🛍️ Product Features:
+✅ Genuine cowhide leather
+✅ Professional craftsmanship  
+✅ Perfect winter protection
+✅ Stylish design
+
+🔗 Shop now: https://yourdomain.com/products/leather-jacket-001
+💰 Special Price: $249.99 (was $299.99)
+
+#LeatherJacket #Fashion #Style #ECommerce #Shopping
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="video"; filename="leather-jacket-demo.mp4"
+Content-Type: video/mp4
+
+[Upload your product demo video file here]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+## Step 6: Monitor Upload Progress
+
+### Check QUEUED videos (just uploaded, waiting for processing)
+GET http://localhost:3008/product-videos/status/QUEUED
+
+### Check UPLOADING videos (currently uploading to YouTube)
+GET http://localhost:3008/product-videos/status/UPLOADING
+
+### Check PROCESSING videos (uploaded, YouTube is processing)
+GET http://localhost:3008/product-videos/status/PROCESSING
+
+### Check LIVE videos (ready for display on website)
+GET http://localhost:3008/product-videos/status/LIVE
+
+### Check FAILED videos (upload errors)
+GET http://localhost:3008/product-videos/status/FAILED
+
+## Step 7: Get Videos for Frontend Display
+
+### Get all videos for a specific product (for product page)
+GET http://localhost:3008/product-videos/product/1
+
+### Expected response for LIVE videos:
+### [
+###   {
+###     "id": 1,
+###     "youtubeVideoId": "dQw4w9WgXcQ", // Use this for YouTube embed
+###     "title": "Premium Leather Jacket - Product Demo",
+###     "status": "LIVE",
+###     "uploadedAt": "2025-09-24T07:30:00Z"
+###   }
+### ]
+
+### Get all videos across all products
+GET http://localhost:3008/product-videos
+
+### Get specific video details
+GET http://localhost:3008/product-videos/1
+
+## Frontend Integration for E-commerce
+
+### Admin Panel - Connect YouTube Channel:
+```javascript
+// Admin clicks "Connect YouTube Channel" button
+const connectYouTubeChannel = () => {
+  window.location.href = '/youtube/oauth/start';
+};
+
+// Check if channel is connected
+const checkChannelConnection = async () => {
+  const response = await fetch('/youtube/oauth/status');
+  const data = await response.json();
+  
+  if (data.connected) {
+    console.log(`Connected to: ${data.channelName}`);
+    document.getElementById('youtube-status').textContent = 
+      `✅ Connected: ${data.channelName}`;
+  } else {
+    console.log('YouTube channel not connected');
+    document.getElementById('youtube-status').textContent = 
+      '❌ YouTube channel not connected';
+  }
+  
+  return data.connected;
+};
+```
+
+### Product Management - Upload Video:
+```javascript
+const uploadProductVideo = async (productId, videoFile, title, description) => {
+  // Check if YouTube channel is connected
+  const isConnected = await checkChannelConnection();
+  if (!isConnected) {
+    alert('Please connect your YouTube channel first from Admin settings');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('productId', productId);
+  formData.append('title', title);
+  formData.append('description', description);
+  formData.append('video', videoFile);
+
+  try {
+    const response = await fetch('/product-videos', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await response.json();
+    console.log('Video queued for upload:', result);
+    
+    // Show success message
+    alert('Video uploaded successfully! It will be processed and added to your YouTube channel.');
+    
+    // Start monitoring upload progress
+    monitorVideoUpload(result.videoId);
+  } catch (error) {
+    console.error('Upload failed:', error);
+    alert('Video upload failed. Please try again.');
+  }
+};
+```
+
+### Monitor Upload Progress:
+```javascript
+const monitorVideoUpload = async (videoId) => {
+  const checkStatus = async () => {
+    try {
+      const response = await fetch(`/product-videos/${videoId}`);
+      const video = await response.json();
+      
+      const statusEl = document.getElementById(`video-status-${videoId}`);
+      
+      switch (video.status) {
+        case 'QUEUED':
+          statusEl.textContent = '⏳ Queued for upload...';
+          statusEl.className = 'status-queued';
+          break;
+        case 'UPLOADING':
+          statusEl.textContent = '📤 Uploading to YouTube...';
+          statusEl.className = 'status-uploading';
+          break;
+        case 'PROCESSING':
+          statusEl.textContent = '⚙️ YouTube is processing...';
+          statusEl.className = 'status-processing';
+          break;
+        case 'LIVE':
+          statusEl.textContent = '✅ Live on YouTube!';
+          statusEl.className = 'status-live';
+          
+          // Video is now live - refresh the product page
+          if (video.youtubeVideoId) {
+            displayYouTubeVideo(video.youtubeVideoId);
+          }
+          return; // Stop monitoring
+        case 'FAILED':
+          statusEl.textContent = `❌ Upload failed: ${video.errorMessage}`;
+          statusEl.className = 'status-failed';
+          return; // Stop monitoring
+      }
+      
+      // Check again in 10 seconds
+      setTimeout(checkStatus, 10000);
+    } catch (error) {
+      console.error('Status check failed:', error);
+    }
+  };
+  
+  checkStatus();
+};
+```
+
+### Display Videos on Product Page:
+```javascript
+const displayProductVideos = async (productId) => {
+  try {
+    const response = await fetch(`/product-videos/product/${productId}`);
+    const videos = await response.json();
+    
+    const videoContainer = document.getElementById('product-videos');
+    videoContainer.innerHTML = '';
+    
+    const liveVideos = videos.filter(v => v.status === 'LIVE');
+    
+    if (liveVideos.length === 0) {
+      videoContainer.innerHTML = '<p>No videos available for this product.</p>';
+      return;
+    }
+    
+    liveVideos.forEach(video => {
+      const videoElement = createYouTubeEmbed(video.youtubeVideoId, video.title);
+      videoContainer.appendChild(videoElement);
+    });
+  } catch (error) {
+    console.error('Failed to load product videos:', error);
+  }
+};
+
+const createYouTubeEmbed = (videoId, title) => {
+  const div = document.createElement('div');
+  div.className = 'youtube-video';
+  div.innerHTML = `
+    <iframe 
+      width="100%" 
+      height="315" 
+      src="https://www.youtube.com/embed/${videoId}" 
+      title="${title}"
+      frameborder="0" 
+      allowfullscreen>
+    </iframe>
+  `;
+  return div;
+};
+```
+
+## OAuth Flow Diagram for E-commerce
+
+```
+[Admin Panel]
+    |
+    | Click "Connect YouTube Channel"
+    v
+GET /youtube/oauth/start
+    |
+    |--> Generate Google OAuth URL
+    |--> HTTP 302 Redirect to Google
+    v
+[Google OAuth Consent Screen]
+    |
+    | Admin grants permissions for e-commerce channel
+    v
+Redirect -> /youtube/oauth/callback?code=XYZ
+    |
+    | Backend exchanges code for tokens
+    | Store tokens for the single dedicated channel
+    v
+Response: "Channel Connected Successfully"
+    |
+    v
+[E-commerce Channel Ready for Video Uploads]
+```
+
+## Key Benefits of This Approach:
+
+✅ **Single Dedicated Channel** - All product videos go to your e-commerce YouTube channel  
+✅ **Centralized Management** - One OAuth connection for entire store  
+✅ **Automatic Processing** - Videos uploaded and processed automatically  
+✅ **Status Tracking** - Real-time status updates for uploads  
+✅ **SEO Friendly** - YouTube videos improve product page SEO  
+✅ **Professional** - Consistent branding across all product videos  
+
+## Production Setup:
+
+1. **Create dedicated YouTube channel** for your e-commerce store
+2. **Set up Google Cloud Project** and enable YouTube Data API
+3. **Configure OAuth redirect URI** to your production domain
+4. **Set environment variables** in production
+5. **Test upload flow** with sample product videos
+6. **Monitor quota usage** and set up alerts
+
+## Environment Variables for Production:
+
+```env
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret  
+YOUTUBE_REDIRECT_URI=https://yourdomain.com/youtube/oauth/callback
+DATABASE_URL=your_production_database_url
+```
+
+This implementation provides a complete e-commerce YouTube integration with a single dedicated channel for all product videos! 🚀

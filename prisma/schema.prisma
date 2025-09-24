@@ -76,6 +76,7 @@ model product {
   medias             ProductMedia[]
   product_tags       product_tags[]
   product_image      product_image[]
+  product_video      product_video[] // YouTube videos relation
 
   @@map("products")
 }
@@ -300,4 +301,53 @@ model ProductMedia {
 
   @@index([productId])
   @@map("product_media")
+}
+
+// YouTube authentication for single dedicated channel
+model YouTubeAuth {
+  id           String    @id @default("default")
+  accessToken  String
+  refreshToken String?
+  expiryDate   DateTime?
+  scope        String?
+  channelId    String? // YouTube channel ID
+  channelName  String? // YouTube channel name
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("youtube_auth")
+}
+
+// Product video status enum
+enum ProductVideoStatus {
+  QUEUED
+  UPLOADING
+  PROCESSING
+  LIVE
+  FAILED
+}
+
+// Product videos for YouTube upload
+model product_video {
+  id               Int                @id @default(autoincrement())
+  productId        Int
+  youtubeVideoId   String? // YouTube video ID (null until uploaded)
+  originalFileName String // Original file name
+  filePath         String? // Temporary file path for processing
+  title            String?
+  description      String?
+  status           ProductVideoStatus @default(QUEUED)
+  errorMessage     String? // Error details if upload fails
+  position         Int? // ordering
+  uploadAttempts   Int                @default(0)
+  scheduledAt      DateTime? // When to attempt upload
+  uploadedAt       DateTime? // When successfully uploaded
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  product product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([status])
+  @@map("product_videos")
 }

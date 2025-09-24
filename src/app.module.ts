@@ -16,12 +16,16 @@ import { ProductColorsModule } from './product-colors/product-colors.module';
 import { ProductPricingModule } from './product-pricing/product-pricing.module';
 import { ProductQuantitiesModule } from './product-quantities/product-quantities.module';
 import { ProductImagesModule } from './product-images/product-images.module';
+import { ProductVideosModule } from './product-videos/product-videos.module';
+import { YoutubeModule } from './youtube/youtube.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -36,6 +40,8 @@ import { ProductImagesModule } from './product-images/product-images.module';
     ProductPricingModule,
     ProductQuantitiesModule,
     ProductImagesModule,
+    ProductVideosModule,
+    YoutubeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
