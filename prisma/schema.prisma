@@ -72,6 +72,8 @@ model product {
   product_quantity   product_quantity[]
   product_size       product_size[]
   product_feature    product_feature[]
+  product_metatag    product_metatag?
+  product_faq        product_faq[]
   product_categories ProductCategory[] // NEW: many-to-many with categories
   medias             ProductMedia[]
   product_tags       product_tags[]
@@ -257,6 +259,44 @@ model product_feature {
   @@map("product_features")
 }
 
+model product_faq {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_faqs")
+}
+
+// Product metatags for SEO / Open Graph per product
+model product_metatag {
+  id              Int      @id @default(autoincrement())
+  productId       Int      @unique
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+  ogTitle         String?
+  ogDescription   String?
+  ogImage         String?
+  canonicalUrl    String?
+  robotsIndex     Boolean? @default(true)
+  robotsFollow    Boolean? @default(true)
+  priority        Float?   @default(0.5)
+  changefreq      String? // e.g., 'daily', 'weekly'
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  product product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_metatags")
+}
+
 model category {
   id       Int    @id @default(autoincrement())
   name     String @unique
@@ -329,25 +369,28 @@ enum ProductVideoStatus {
 
 // Product videos for YouTube upload
 model product_video {
-  id               Int                @id @default(autoincrement())
-  productId        Int
-  youtubeVideoId   String? // YouTube video ID (null until uploaded)
-  originalFileName String // Original file name
-  filePath         String? // Temporary file path for processing
-  title            String?
-  description      String?
-  status           ProductVideoStatus @default(QUEUED)
-  errorMessage     String? // Error details if upload fails
-  position         Int? // ordering
-  uploadAttempts   Int                @default(0)
-  scheduledAt      DateTime? // When to attempt upload
-  uploadedAt       DateTime? // When successfully uploaded
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  id          Int       @id @default(autoincrement())
+  productId   Int
+  iframeUrl   String? // YouTube embed URL (null until live)
+  videoType   String? // e.g., "mainVideo", "cuttingVideo", "stitchingVideo","assemblyVideo"
+  scheduledAt DateTime? // When to attempt upload
+  uploadedAt  DateTime? // When successfully uploaded
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   product product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
-  @@index([status])
+  // @@index([status])
   @@map("product_videos")
 }
+
+// youtubeVideoId String? // YouTube video ID (null until uploaded)
+// originalFileName String // Original file name
+// filePath         String? // Temporary file path for processing
+// title            String?
+// description      String?
+// status           ProductVideoStatus @default(QUEUED)
+// errorMessage     String? // Error details if upload fails
+// position         Int? // ordering
+// uploadAttempts   Int                @default(0)

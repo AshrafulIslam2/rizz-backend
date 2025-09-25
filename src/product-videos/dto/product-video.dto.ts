@@ -1,5 +1,5 @@
-import { IsInt, IsString, IsOptional, IsEnum, Min } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsInt, IsString, IsOptional, IsEnum, Min, IsObject } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export enum ProductVideoStatus {
     QUEUED = 'QUEUED',
@@ -69,4 +69,43 @@ export class ProductVideoResponseDto {
         id: number;
         title: string;
     };
+}
+
+// DTOs for receiving embed (iframe) based videos from frontend
+export class EmbedVideoItem {
+    @IsString()
+    url: string;
+
+    @IsString()
+    @IsOptional()
+    title?: string;
+
+    @IsOptional()
+    isMain?: boolean;
+}
+
+export class CreateEmbedVideosDto {
+    @IsInt()
+    @Transform(({ value }) => parseInt(value))
+    productId: number;
+
+    @IsOptional()
+    @Type(() => EmbedVideoItem)
+    mainVideo?: EmbedVideoItem;
+
+    @IsOptional()
+    @Type(() => EmbedVideoItem)
+    cuttingVideo?: EmbedVideoItem;
+
+    @IsOptional()
+    @Type(() => EmbedVideoItem)
+    stitchingVideo?: EmbedVideoItem;
+
+    @IsOptional()
+    @Type(() => EmbedVideoItem)
+    assemblyVideo?: EmbedVideoItem;
+
+    @IsOptional()
+    @Type(() => EmbedVideoItem)
+    finishingVideo?: EmbedVideoItem;
 }

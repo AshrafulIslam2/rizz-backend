@@ -18,6 +18,9 @@ import { ProductQuantitiesModule } from './product-quantities/product-quantities
 import { ProductImagesModule } from './product-images/product-images.module';
 import { ProductVideosModule } from './product-videos/product-videos.module';
 import { YoutubeModule } from './youtube/youtube.module';
+import { ProductFeaturesModule } from './product-features/product-features.module';
+import { ProductFaqsModule } from './product-faqs/product-faqs.module';
+import { ProductMetatagsModule } from './product-metatags/product-metatags.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -41,7 +44,10 @@ import { ScheduleModule } from '@nestjs/schedule';
     ProductQuantitiesModule,
     ProductImagesModule,
     ProductVideosModule,
+    ProductFeaturesModule,
+    ProductMetatagsModule,
     YoutubeModule,
+    ProductFaqsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

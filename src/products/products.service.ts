@@ -73,6 +73,9 @@ export class ProductsService {
                         size: true,
                     }
                 },
+                product_faq: true,
+                product_metatag: true,
+                product_video: true,
                 product_pricing: {
                     include: {
                         color: true,
@@ -120,6 +123,9 @@ export class ProductsService {
                         position: 'asc',
                     },
                 },
+                product_faq: true,
+                product_metatag: true,
+                product_video: true,
                 product_pricing: true,
                 product_quantity: true,
                 product_size: {
