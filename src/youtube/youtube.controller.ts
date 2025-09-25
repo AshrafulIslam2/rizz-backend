@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res, HttpStatus, Logger } from '@nestjs/common';
+import { Controller, Get, Query, Res, HttpStatus, Logger, Post } from '@nestjs/common';
 import type { Response } from 'express';
 import { YoutubeService } from './youtube.service';
 
@@ -89,6 +89,27 @@ export class YoutubeController {
             return {
                 connected: false,
                 error: 'Failed to check connection status'
+            };
+        }
+    }
+
+    /**
+     * Disconnect the dedicated e-commerce YouTube channel
+     * Frontend can call this to revoke stored tokens and clear the saved channel
+     */
+    @Post('disconnect')
+    async disconnect() {
+        try {
+            await this.youtubeService.disconnect();
+            return {
+                disconnected: true,
+                message: 'YouTube channel disconnected successfully',
+            };
+        } catch (error) {
+            this.logger.error('Failed to disconnect YouTube channel:', error);
+            return {
+                disconnected: false,
+                error: 'Failed to disconnect YouTube channel',
             };
         }
     }

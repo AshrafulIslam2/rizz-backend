@@ -357,4 +357,51 @@ export class YoutubeService {
             throw error;
         }
     }
+
+    /**
+     * Disconnect the e-commerce YouTube channel.
+     * This attempts to revoke any tokens with Google and clears stored credentials in the database.
+     */
+    async disconnect(): Promise<void> {
+        try {
+            const auth = await this.prisma.youTubeAuth.findUnique({
+                where: { id: this.YOUTUBE_AUTH_ID },
+            });
+
+            if (!auth) {
+                this.logger.log('No e-commerce YouTube auth record found to disconnect');
+                return;
+            }
+
+            // Attempt to revoke access/refresh tokens with Google (best-effort)
+            try {
+                if (auth.accessToken) {
+                    await this.oauth2Client.revokeToken(auth.accessToken).catch(err => {
+                        this.logger.warn('Failed to revoke access token:', err);
+                    });
+                }
+
+                if (auth.refreshToken) {
+                    await this.oauth2Client.revokeToken(auth.refreshToken).catch(err => {
+                        this.logger.warn('Failed to revoke refresh token:', err);
+                    });
+                }
+            } catch (revokeErr) {
+                this.logger.warn('Error while revoking tokens (continuing to clear DB):', revokeErr);
+            }
+
+            // Remove the stored credentials record entirely so isConnected() will return false
+            await this.prisma.youTubeAuth.delete({
+                where: { id: this.YOUTUBE_AUTH_ID },
+            }).catch(err => {
+                // If delete fails (e.g., already deleted), log and continue
+                this.logger.warn('Could not delete YouTubeAuth record (may already be removed):', err.message || err);
+            });
+
+            this.logger.log('E-commerce YouTube channel disconnected and credentials cleared');
+        } catch (error) {
+            this.logger.error('Failed to disconnect e-commerce YouTube channel:', error);
+            throw error;
+        }
+    }
 }
