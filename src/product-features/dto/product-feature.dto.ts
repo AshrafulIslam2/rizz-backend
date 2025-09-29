@@ -26,11 +26,11 @@ export class UpdateProductFeatureDto {
 
 export class FeatureItemDto {
     @IsString()
-    name: string;
+    title: string;
 
     @IsString()
     @IsOptional()
-    value?: string;
+    description?: string;
 }
 
 export class CreateProductFeaturesDto {

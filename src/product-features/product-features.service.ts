@@ -22,8 +22,8 @@ export class ProductFeaturesService {
 
         const data = features.map(f => ({
             productId,
-            feature_title: f.name,
-            feature_desc: f.value || null,
+            feature_title: f.title,
+            feature_desc: f.description || null,
         }));
 
         // create many using transaction

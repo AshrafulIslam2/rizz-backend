@@ -128,12 +128,12 @@ export class ProductsService {
                 product_video: true,
                 product_pricing: true,
                 product_quantity: true,
+                product_feature: true,
                 product_size: {
                     include: {
                         size: true,
                     },
                 },
-                product_feature: true,
                 product_categories: {
                     include: {
                         category: true,
@@ -201,6 +201,7 @@ export class ProductsService {
         const product = await this.prisma.product.findUnique({
             where: { id },
         });
+        console.log("🚀 ~ ProductsService ~ remove ~ product:", product)
 
         if (!product) {
             throw new NotFoundException(`Product with ID ${id} not found`);

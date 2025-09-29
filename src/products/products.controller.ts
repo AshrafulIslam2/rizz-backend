@@ -53,8 +53,9 @@ export class ProductsController {
     }
 
     @Delete(':id')
-    @HttpCode(HttpStatus.NO_CONTENT)
+    @HttpCode(HttpStatus.OK)
     remove(@Param('id', ParseIntPipe) id: number) {
+        console.log("🚀 ~ ProductsController ~ remove ~ id:", id)
         return this.productsService.remove(id);
     }
 }
