@@ -21,7 +21,9 @@ import { YoutubeModule } from './youtube/youtube.module';
 import { ProductFeaturesModule } from './product-features/product-features.module';
 import { ProductFaqsModule } from './product-faqs/product-faqs.module';
 import { ProductMetatagsModule } from './product-metatags/product-metatags.module';
+
 import { ScheduleModule } from '@nestjs/schedule';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -48,6 +50,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ProductMetatagsModule,
     YoutubeModule,
     ProductFaqsModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

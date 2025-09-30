@@ -1,3 +1,63 @@
+// Order status enum
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+}
+
+model order {
+  id        Int             @id @default(autoincrement())
+  userId    Int
+  status    OrderStatus     @default(PENDING)
+  total     Float
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  items     order_item[]
+  shipping  order_shipping?
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("orders")
+}
+
+model order_item {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int
+  price     Float
+  colorId   Int?
+  sizeId    Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order   order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color   Color?  @relation(fields: [colorId], references: [id], onDelete: SetNull)
+  size    Size?   @relation(fields: [sizeId], references: [id], onDelete: SetNull)
+
+  @@map("order_items")
+}
+
+model order_shipping {
+  id         Int      @id @default(autoincrement())
+  orderId    Int      @unique
+  fullName   String
+  address1   String
+  address2   String?
+  city       String
+  state      String
+  postalCode String
+  country    String
+  phone      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  order order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_shipping")
+}
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -22,6 +82,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   posts     Post[]
+  orders    order[]
 
   @@map("users")
 }
@@ -79,6 +140,7 @@ model product {
   product_tags       product_tags[]
   product_image      product_image[]
   product_video      product_video[] // YouTube videos relation
+  order_items        order_item[]
 
   @@map("products")
 }
@@ -102,6 +164,7 @@ model Color {
   products       product_colors[]
   pricing_rules  product_pricing[] // NEW: relation to pricing rules
   quantity_rules product_quantity[] // NEW: relation to quantity rules
+  order_items    order_item[]
 
   @@unique([name, hexCode])
   @@map("colors")
@@ -228,6 +291,7 @@ model Size {
   products       product_size[]
   pricing_rules  product_pricing[] // NEW: relation to pricing rules
   quantity_rules product_quantity[] // NEW: relation to quantity rules
+  order_items    order_item[]
 
   @@unique([value, system])
   @@map("sizes")

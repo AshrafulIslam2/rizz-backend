@@ -25,8 +25,18 @@ export class ProductsController {
     }
 
     @Get()
-    findAll() {
-        return this.productsService.findAll();
+    findAll(
+        @Query('page') page?: number,
+        @Query('limit') limit?: number,
+        @Query('categoryId') categoryId?: number,
+        @Query('sortBy') sortBy?: 'lowprice' | 'highprice',
+    ) {
+        return this.productsService.findAll({
+            page: page ? Number(page) : undefined,
+            limit: limit ? Number(limit) : undefined,
+            categoryId: categoryId ? Number(categoryId) : undefined,
+            sortBy,
+        });
     }
 
     @Get('published')

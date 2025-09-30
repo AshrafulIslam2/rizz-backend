@@ -45,8 +45,36 @@ export class ProductsService {
         });
     }
 
-    async findAll() {
+    async findAll(params: {
+        page?: number;
+        limit?: number;
+        categoryId?: number;
+        sortBy?: 'lowprice' | 'highprice';
+    } = {}) {
+        const { page = 1, limit = 10, categoryId, sortBy } = params;
+
+        // Filtering by categoryId
+        let where: any = {};
+        if (categoryId) {
+            where = {
+                product_categories: {
+                    some: {
+                        categoryId: categoryId,
+                    },
+                },
+            };
+        }
+
+        // Sorting
+        let orderBy: any = { createdAt: 'desc' };
+        if (sortBy === 'lowprice') {
+            orderBy = { basePrice: 'asc' };
+        } else if (sortBy === 'highprice') {
+            orderBy = { basePrice: 'desc' };
+        }
+
         return this.prisma.product.findMany({
+            where,
             include: {
                 product_colors: {
                     include: {
@@ -94,9 +122,9 @@ export class ProductsService {
                     },
                 },
             },
-            orderBy: {
-                createdAt: 'desc',
-            },
+            orderBy,
+            skip: (page - 1) * limit,
+            take: limit,
         });
     }
 

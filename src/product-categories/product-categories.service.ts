@@ -11,6 +11,67 @@ import {
 export class ProductCategoriesService {
     constructor(private prisma: PrismaService) { }
 
+    async getCategoryProductsByName(categoryName: string) {
+        const category = await this.prisma.category.findUnique({
+            where: { name: categoryName },
+        });
+        if (!category) {
+            throw new NotFoundException(`Category with name '${categoryName}' not found`);
+        }
+        return this.prisma.productCategory.findMany({
+            where: { categoryId: category.id },
+            include: {
+                product: {
+                    include: {
+                        product_image: {
+                            select: {
+                                id: true,
+                                url: true,
+                                alt: true,
+                                level: true,
+                                position: true,
+                                createdAt: true,
+                                updatedAt: true,
+                            },
+                            orderBy: {
+                                position: 'asc',
+                            },
+                        },
+                        product_quantity: {
+                            include: {
+                                color: true,
+                                size: true,
+                            }
+                        },
+                        product_faq: true,
+                        product_metatag: true,
+                        product_video: true,
+                        product_pricing: {
+                            include: {
+                                color: true,
+                                size: true,
+                            }
+                        },
+                        product_size: {
+                            include: {
+                                size: true,
+                            },
+                        },
+                        product_feature: true,
+                        product_categories: {
+                            include: {
+                                category: true,
+                            },
+                        },
+                    }
+                },
+            },
+            orderBy: {
+                product: { title: 'asc' },
+            },
+        });
+    }
+
     async addCategoryToProduct(addCategoryToProductDto: AddCategoryToProductDto) {
         const { productId, selectedCategories } = addCategoryToProductDto;
 

@@ -49,6 +49,11 @@ export class ProductCategoriesController {
         return this.productCategoriesService.getCategoryProducts(categoryId);
     }
 
+    @Get('category-name/:categoryName')
+    getCategoryProductsByName(@Param('categoryName') categoryName: string) {
+        return this.productCategoriesService.getCategoryProductsByName(categoryName);
+    }
+
     @Delete('remove')
     @HttpCode(HttpStatus.OK)
     removeCategoryFromProduct(@Body() removeCategoryFromProductDto: RemoveCategoryFromProductDto) {
