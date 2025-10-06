@@ -279,13 +279,31 @@ export class ProductsService {
                         color: true,
                     },
                 },
+                product_image: {
+                    select: {
+                        id: true,
+                        url: true,
+                        alt: true,
+                        level: true,
+                        position: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    },
+                    orderBy: {
+                        position: 'asc',
+                    },
+                },
+                product_faq: true,
+                product_metatag: true,
+                product_video: true,
                 product_pricing: true,
+                product_quantity: true,
+                product_feature: true,
                 product_size: {
                     include: {
                         size: true,
                     },
                 },
-                product_feature: true,
                 product_categories: {
                     include: {
                         category: true,
