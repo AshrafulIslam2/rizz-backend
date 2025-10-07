@@ -1,20 +1,24 @@
 # Update Shipping Address Feature
 
 ## Overview
+
 Users can now update their shipping address for an order. All fields are optional - update only what needs to be changed.
 
 ## API Endpoint
 
 ### Update Shipping Address
+
 ```
 PUT /orders/:id/shipping
 ```
 
 **Parameters:**
+
 - `id` (path parameter): Order ID
 - `userId` (query parameter, optional): User ID for verification
 
 **Request Body (all fields optional):**
+
 ```json
 {
   "fullName": "Updated Name",
@@ -28,6 +32,7 @@ PUT /orders/:id/shipping
 ## Usage Examples
 
 ### Update Only Full Name
+
 ```bash
 PUT http://localhost:3008/orders/6/shipping?userId=1
 Content-Type: application/json
@@ -38,6 +43,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "id": 6,
@@ -53,6 +59,7 @@ Content-Type: application/json
 ```
 
 ### Update Multiple Fields
+
 ```bash
 PUT http://localhost:3008/orders/6/shipping?userId=1
 Content-Type: application/json
@@ -65,6 +72,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "id": 6,
@@ -80,6 +88,7 @@ Content-Type: application/json
 ```
 
 ### Update All Fields
+
 ```bash
 PUT http://localhost:3008/orders/6/shipping?userId=1
 Content-Type: application/json
@@ -94,6 +103,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "id": 6,
@@ -111,6 +121,7 @@ Content-Type: application/json
 ## Error Responses
 
 ### Order Not Found
+
 ```json
 {
   "statusCode": 404,
@@ -120,6 +131,7 @@ Content-Type: application/json
 ```
 
 ### Unauthorized (Wrong User)
+
 ```json
 {
   "statusCode": 404,
@@ -129,6 +141,7 @@ Content-Type: application/json
 ```
 
 ### Shipping Info Not Found
+
 ```json
 {
   "statusCode": 404,
@@ -138,6 +151,7 @@ Content-Type: application/json
 ```
 
 ### Validation Error (Invalid Email)
+
 ```json
 {
   "statusCode": 400,
@@ -163,6 +177,7 @@ Content-Type: application/json
 ## Frontend Integration
 
 ### React/JavaScript Example
+
 ```javascript
 const updateShipping = async (orderId, updates, userId) => {
   const response = await fetch(
@@ -173,37 +188,42 @@ const updateShipping = async (orderId, updates, userId) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(updates),
-    }
+    },
   );
-  
+
   if (!response.ok) {
     throw new Error('Failed to update shipping address');
   }
-  
+
   return response.json();
 };
 
 // Usage
-const result = await updateShipping(6, {
-  address1: 'New Address',
-  phone: '+880 1234567890'
-}, 1);
+const result = await updateShipping(
+  6,
+  {
+    address1: 'New Address',
+    phone: '+880 1234567890',
+  },
+  1,
+);
 
 console.log('Updated shipping:', result);
 ```
 
 ### Form Handling Example
+
 ```javascript
 const handleSubmit = async (e) => {
   e.preventDefault();
-  
+
   const updates = {};
   if (fullName) updates.fullName = fullName;
   if (address1) updates.address1 = address1;
   if (email) updates.email = email;
   if (deliveryArea) updates.deliveryArea = deliveryArea;
   if (phone) updates.phone = phone;
-  
+
   try {
     const updated = await updateShipping(orderId, updates, userId);
     alert('Shipping address updated successfully!');

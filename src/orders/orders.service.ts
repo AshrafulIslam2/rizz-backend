@@ -244,21 +244,54 @@ export class OrdersService {
     }
 
     async updateShippingAddress(shippingId: number, updateData: UpdateShippingDto) {
-        // Verify shipping record exists
-        const shipping = await this.prisma.order_shipping.findUnique({
-            where: { id: shippingId }
+        return this.prisma.$transaction(async (tx) => {
+            // Verify shipping record exists
+            const shipping = await tx.order_shipping.findUnique({
+                where: { id: shippingId },
+                include: { order: true }
+            });
+
+            if (!shipping) {
+                throw new NotFoundException('Shipping information not found');
+            }
+
+            // Extract delivery charge from updateData
+            const { deliveryCharge, ...shippingData } = updateData;
+
+            // Update shipping address (only shipping fields)
+            const updatedShipping = await tx.order_shipping.update({
+                where: { id: shippingId },
+                data: shippingData,
+            });
+
+            // If delivery charge is provided, update order total
+            if (deliveryCharge !== undefined) {
+                const currentOrder = shipping.order;
+                const oldDeliveryCharge = currentOrder.deliveryCharge;
+                const oldTotal = currentOrder.total;
+
+                // Calculate new total: remove old delivery charge, add new delivery charge
+                const subtotal = oldTotal - oldDeliveryCharge;
+                const newTotal = subtotal + deliveryCharge;
+
+                // Update order with new delivery charge and total
+                await tx.order.update({
+                    where: { id: shipping.orderId },
+                    data: {
+                        deliveryCharge: deliveryCharge,
+                        total: newTotal,
+                    },
+                });
+
+                // Return updated shipping with new delivery charge info
+                return {
+                    ...updatedShipping,
+                    deliveryCharge: deliveryCharge,
+                    newTotal: newTotal,
+                };
+            }
+
+            return updatedShipping;
         });
-
-        if (!shipping) {
-            throw new NotFoundException('Shipping information not found');
-        }
-
-        // Update shipping address (only fields that are provided)
-        const updatedShipping = await this.prisma.order_shipping.update({
-            where: { id: shippingId },
-            data: updateData,
-        });
-
-        return updatedShipping;
     }
 }
