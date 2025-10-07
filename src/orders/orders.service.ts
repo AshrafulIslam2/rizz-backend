@@ -3,6 +3,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CheckoutDto } from './dto/checkout.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { UpdateShippingDto } from './dto/update-shipping.dto';
 import { Prisma, $Enums } from '@prisma/client';
 
 @Injectable()
@@ -240,5 +241,24 @@ export class OrdersService {
         if (order.status !== $Enums.OrderStatus.PENDING) throw new BadRequestException('Cannot cancel this order');
         // Optionally, restore stock here
         return this.prisma.order.update({ where: { id }, data: { status: $Enums.OrderStatus.CANCELLED } });
+    }
+
+    async updateShippingAddress(shippingId: number, updateData: UpdateShippingDto) {
+        // Verify shipping record exists
+        const shipping = await this.prisma.order_shipping.findUnique({
+            where: { id: shippingId }
+        });
+
+        if (!shipping) {
+            throw new NotFoundException('Shipping information not found');
+        }
+
+        // Update shipping address (only fields that are provided)
+        const updatedShipping = await this.prisma.order_shipping.update({
+            where: { id: shippingId },
+            data: updateData,
+        });
+
+        return updatedShipping;
     }
 }
