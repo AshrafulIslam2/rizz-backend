@@ -2,12 +2,12 @@ import {
     Injectable,
     UnauthorizedException,
     ConflictException,
+    BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
-import { UserWithoutPassword, AuthResponse } from './types/auth.types';
-import * as bcrypt from 'bcrypt';
+import { AuthResponse } from './types/auth.types';
 
 @Injectable()
 export class AuthService {
@@ -16,62 +16,42 @@ export class AuthService {
         private jwtService: JwtService,
     ) { }
 
-    async validateUser(
-        email: string,
-        password: string,
-    ): Promise<UserWithoutPassword | null> {
-        const user = await this.usersService.findByEmail(email);
-
-        if (user && (await bcrypt.compare(password, user.password))) {
-            const { password: _, ...result } = user;
-            return result as UserWithoutPassword;
-        }
-        return null;
-    }
+    // Note: Password-based authentication has been removed
+    // Users are now created automatically during checkout
+    // This auth service is kept for potential future use
 
     async login(loginDto: LoginDto): Promise<AuthResponse> {
-        const user = await this.validateUser(loginDto.email, loginDto.password);
-
-        if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
-        }
-
-        const payload = { email: user.email, sub: user.id };
-
-        return {
-            access_token: this.jwtService.sign(payload),
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-            },
-        };
+        throw new BadRequestException(
+            'Password-based authentication is disabled. Users are created automatically during checkout.'
+        );
     }
 
     async register(registerDto: RegisterDto): Promise<AuthResponse> {
-        const existingUser = await this.usersService.findByEmail(registerDto.email);
+        throw new BadRequestException(
+            'Password-based registration is disabled. Users are created automatically during checkout.'
+        );
+    }
 
-        if (existingUser) {
-            throw new ConflictException('User with this email already exists');
+    // Helper method to generate token for a user (for future use)
+    async generateToken(userId: number): Promise<string> {
+        const user = await this.usersService.findOne(userId);
+
+        if (!user) {
+            throw new UnauthorizedException('User not found');
         }
 
-        const user = await this.usersService.create({
-            email: registerDto.email,
-            name: registerDto.name,
-            password: registerDto.password,
-        });
-
         const payload = { email: user.email, sub: user.id };
+        return this.jwtService.sign(payload);
+    }
 
-        return {
-            access_token: this.jwtService.sign(payload),
-            user: {
-                id: user.id,
+    // Validate user by email and phone (for future use)
+    async validateUserByEmailOrPhone(email: string, phoneNumber: string) {
+        const user = await this.usersService.findByEmail(email);
 
-                email: user.email,
+        if (user && user.phoneNumber === phoneNumber) {
+            return user;
+        }
 
-                name: user.name,
-            },
-        };
+        return null;
     }
 }

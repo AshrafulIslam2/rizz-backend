@@ -1,62 +1,4 @@
 // Order status enum
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  DELIVERED
-  CANCELLED
-}
-
-model order {
-  id        Int             @id @default(autoincrement())
-  userId    Int
-  status    OrderStatus     @default(PENDING)
-  total     Float
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-  items     order_item[]
-  shipping  order_shipping?
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("orders")
-}
-
-model order_item {
-  id        Int      @id @default(autoincrement())
-  orderId   Int
-  productId Int
-  quantity  Int
-  price     Float
-  colorId   Int?
-  sizeId    Int?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  order   order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  color   Color?  @relation(fields: [colorId], references: [id], onDelete: SetNull)
-  size    Size?   @relation(fields: [sizeId], references: [id], onDelete: SetNull)
-
-  @@map("order_items")
-}
-
-model order_shipping {
-  id         Int      @id @default(autoincrement())
-  orderId    Int      @unique
-  fullName   String
-  address1   String
-  address2   String?
-  city       String
-  state      String
-  postalCode String
-  country    String
-  phone      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  order order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  @@map("order_shipping")
-}
 
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
@@ -75,30 +17,15 @@ datasource db {
 
 // User model
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  posts     Post[]
-  orders    order[]
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String   @unique
+  phoneNumber String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      order[]
 
   @@map("users")
-}
-
-// Post model
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  authorId  Int
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  @@map("posts")
 }
 
 model product {
@@ -458,3 +385,61 @@ model product_video {
 // errorMessage     String? // Error details if upload fails
 // position         Int? // ordering
 // uploadAttempts   Int                @default(0)
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+}
+
+model order {
+  id             Int             @id @default(autoincrement())
+  orderCode      String          @unique
+  userId         Int
+  status         OrderStatus     @default(PENDING)
+  total          Float
+  deliveryCharge Float           @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  items          order_item[]
+  shipping       order_shipping?
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("orders")
+}
+
+model order_item {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int
+  price     Float
+  colorId   Int?
+  sizeId    Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order   order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color   Color?  @relation(fields: [colorId], references: [id], onDelete: SetNull)
+  size    Size?   @relation(fields: [sizeId], references: [id], onDelete: SetNull)
+
+  @@map("order_items")
+}
+
+model order_shipping {
+  id           Int      @id @default(autoincrement())
+  orderId      Int      @unique
+  fullName     String
+  address1     String
+  email        String?
+  deliveryArea String
+  phone        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  order order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_shipping")
+}

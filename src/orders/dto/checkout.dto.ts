@@ -1,47 +1,82 @@
-import { IsInt, IsArray, ValidateNested, IsNumber, IsString, IsOptional, IsObject } from 'class-validator';
+import { IsInt, IsArray, ValidateNested, IsNumber, IsString, IsOptional, IsObject, IsEmail } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class CheckoutItemDto {
-    @IsInt()
-    productId: number;
+export class UserDto {
+    @IsString()
+    name: string;
 
+    @IsString()
+    phone: string;
+
+    @IsEmail()
+    email: string;
+
+    @IsString()
+    address: string;
+
+    @IsString()
+    deliveryArea: string;
+}
+
+export class ProductDto {
     @IsInt()
-    quantity: number;
+    id: number;
+
+    @IsString()
+    name: string;
 
     @IsNumber()
     price: number;
+
+    @IsOptional()
+    @IsNumber()
+    originalPrice?: number;
+
+    @IsOptional()
+    @IsString()
+    image?: string;
+
+    @IsOptional()
+    @IsString()
+    color?: string;
 
     @IsOptional()
     @IsInt()
     colorId?: number;
 
     @IsOptional()
+    @IsString()
+    size?: string;
+
+    @IsOptional()
     @IsInt()
     sizeId?: number;
-}
 
-export class ShippingAddressDto {
-    @IsString() fullName: string;
-    @IsString() address1: string;
-    @IsOptional() @IsString() address2?: string;
-    @IsString() city: string;
-    @IsString() state: string;
-    @IsString() postalCode: string;
-    @IsString() country: string;
-    @IsOptional() @IsString() phone?: string;
+    @IsInt()
+    quantity: number;
+
+    @IsOptional()
+    @IsString()
+    sku?: string;
 }
 
 export class CheckoutDto {
-    @IsInt()
-    userId: number;
+    @IsObject()
+    @ValidateNested()
+    @Type(() => UserDto)
+    user: UserDto;
 
     @IsArray()
     @ValidateNested({ each: true })
-    @Type(() => CheckoutItemDto)
-    items: CheckoutItemDto[];
+    @Type(() => ProductDto)
+    products: ProductDto[];
 
-    @IsObject()
-    @ValidateNested()
-    @Type(() => ShippingAddressDto)
-    shipping: ShippingAddressDto;
+    @IsNumber()
+    total: number;
+
+    @IsNumber()
+    deliveryCharge: number;
+
+    @IsNumber()
+    totalPayableAmount: number;
 }

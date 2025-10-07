@@ -1,4 +1,7 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+
+// Note: Password-based authentication has been removed
+// These DTOs are kept for potential future use but will throw errors if used
 
 export class LoginDto {
   @IsEmail()
@@ -7,21 +10,19 @@ export class LoginDto {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(6)
-  password: string;
+  phoneNumber: string;
 }
 
 export class RegisterDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
   @IsString()
   @IsNotEmpty()
-  name: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(6)
-  password: string;
+  phoneNumber: string;
 }

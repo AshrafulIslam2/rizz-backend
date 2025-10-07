@@ -9,55 +9,142 @@ import { Prisma, $Enums } from '@prisma/client';
 export class OrdersService {
     constructor(private readonly prisma: PrismaService) { }
 
+    /**
+     * Generate a unique order code with format: ORD-YEAR-RANDOM6
+     * Example: ORD-2025-9F3C21
+     */
+    private async generateUniqueOrderCode(tx: any): Promise<string> {
+        let orderCode: string;
+        let isUnique = false;
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        while (!isUnique && attempts < maxAttempts) {
+            // Generate order code: ORD-YEAR-RANDOM6
+            const year = new Date().getFullYear();
+            const randomPart = Math.random().toString(36).substr(2, 6).toUpperCase();
+            orderCode = `ORD-${year}-${randomPart}`;
+
+            // Check if it already exists
+            const existing = await tx.order.findUnique({
+                where: { orderCode }
+            });
+
+            if (!existing) {
+                isUnique = true;
+            }
+            attempts++;
+        }
+
+        if (!isUnique) {
+            throw new BadRequestException('Failed to generate unique order code. Please try again.');
+        }
+
+        return orderCode!;
+    }
+
     async checkout(dto: CheckoutDto) {
         return this.prisma.$transaction(async (tx) => {
-            // Validate products and stock
-            const items = await Promise.all(
-                dto.items.map(async (item) => {
+            // 1. Check if user exists by phone or email
+            let user = await tx.user.findFirst({
+                where: {
+                    OR: [
+                        { phoneNumber: dto.user.phone },
+                        { email: dto.user.email }
+                    ]
+                }
+            });
+
+            // 2. If user doesn't exist, create new user
+            if (!user) {
+                user = await tx.user.create({
+                    data: {
+                        name: dto.user.name,
+                        email: dto.user.email,
+                        phoneNumber: dto.user.phone,
+                    }
+                });
+            }
+
+            // 3. Validate products and stock
+            const stockValidations = await Promise.all(
+                dto.products.map(async (product) => {
                     const pq = await tx.product_quantity.findFirst({
                         where: {
-                            productId: item.productId,
-                            colorId: item.colorId ?? undefined,
-                            sizeId: item.sizeId ?? undefined,
+                            productId: product.id,
+                            colorId: product.colorId ?? undefined,
+                            sizeId: product.sizeId ?? undefined,
                         },
                     });
-                    if (!pq || pq.available_quantity < item.quantity) {
-                        throw new BadRequestException(`Insufficient stock for product ${item.productId}`);
+                    if (!pq || pq.available_quantity < product.quantity) {
+                        throw new BadRequestException(
+                            `Insufficient stock for product ${product.name} (ID: ${product.id})`
+                        );
                     }
-                    return pq;
+                    return { pq, product };
                 })
             );
-            // Reduce stock
+
+            // 4. Reduce stock
             await Promise.all(
-                items.map((pq, idx) =>
+                stockValidations.map(({ pq, product }) =>
                     tx.product_quantity.update({
                         where: { id: pq.id },
-                        data: { available_quantity: { decrement: dto.items[idx].quantity } },
+                        data: { available_quantity: { decrement: product.quantity } },
                     })
                 )
             );
-            // Create order
-            const total = dto.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            // 5. Generate unique order code
+            const orderCode = await this.generateUniqueOrderCode(tx);
+
+            // 6. Create order with items and shipping
             const order = await tx.order.create({
                 data: {
-                    userId: dto.userId,
+                    orderCode,
+                    userId: user.id,
                     status: $Enums.OrderStatus.PENDING,
-                    total,
+                    total: dto.totalPayableAmount,
+                    deliveryCharge: dto.deliveryCharge,
                     items: {
-                        create: dto.items.map((item) => ({
-                            productId: item.productId,
-                            quantity: item.quantity,
-                            price: item.price,
-                            colorId: item.colorId,
-                            sizeId: item.sizeId,
+                        create: dto.products.map((product) => ({
+                            productId: product.id,
+                            quantity: product.quantity,
+                            price: product.price,
+                            colorId: product.colorId,
+                            sizeId: product.sizeId,
                         })),
                     },
                     shipping: {
-                        create: dto.shipping,
+                        create: {
+                            fullName: dto.user.name,
+                            address1: dto.user.address,
+                            email: dto.user.email,
+                            phone: dto.user.phone,
+                            deliveryArea: dto.user.deliveryArea,
+                        },
                     },
                 },
-                include: { items: true, shipping: true },
+                include: {
+                    items: {
+                        include: {
+                            product: true,
+                            color: true,
+                            size: true,
+                        }
+                    },
+                    shipping: true,
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            phoneNumber: true,
+                        }
+                    }
+                },
             });
+
             return order;
         });
     }
@@ -73,7 +160,9 @@ export class OrdersService {
     async getOrderById(id: number, userId?: number) {
         const order = await this.prisma.order.findUnique({
             where: { id },
-            include: { items: true, shipping: true },
+            include: { items: {
+                select: { id, orderCode, productId, quantity, price, colorId, sizeId, product: true, color: true, size: true }
+            }, shipping: true, user: { select: { id: true, name: true, email: true, phoneNumber: true } } },
         });
         if (!order) throw new NotFoundException('Order not found');
         if (userId && order.userId !== userId) throw new NotFoundException('Order not found');

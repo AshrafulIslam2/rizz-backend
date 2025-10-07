@@ -1,7 +1,8 @@
-export interface UserWithoutPassword {
+export interface UserResponse {
     id: number;
+    name: string;
     email: string;
-    name: string | null;
+    phoneNumber: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -10,7 +11,8 @@ export interface AuthResponse {
     access_token: string;
     user: {
         id: number;
+        name: string;
         email: string;
-        name: string | null;
+        phoneNumber: string;
     };
 }
