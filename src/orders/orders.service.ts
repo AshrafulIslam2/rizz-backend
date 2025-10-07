@@ -128,7 +128,11 @@ export class OrdersService {
                 include: {
                     items: {
                         include: {
-                            product: true,
+                            product: {
+                                include: {
+                                    product_image: true,
+                                }
+                            },
                             color: true,
                             size: true,
                         }
@@ -152,7 +156,20 @@ export class OrdersService {
     async getUserOrders(userId: number) {
         return this.prisma.order.findMany({
             where: { userId },
-            include: { items: true, shipping: true },
+            include: {
+                items: {
+                    include: {
+                        product: {
+                            include: {
+                                product_image: true,
+                            }
+                        },
+                        color: true,
+                        size: true,
+                    }
+                },
+                shipping: true
+            },
             orderBy: { createdAt: 'desc' },
         });
     }
@@ -160,9 +177,28 @@ export class OrdersService {
     async getOrderById(id: number, userId?: number) {
         const order = await this.prisma.order.findUnique({
             where: { id },
-            include: { items: {
-                select: { id, orderCode, productId, quantity, price, colorId, sizeId, product: true, color: true, size: true }
-            }, shipping: true, user: { select: { id: true, name: true, email: true, phoneNumber: true } } },
+            include: {
+                items: {
+                    include: {
+                        product: {
+                            include: {
+                                product_image: true,
+                            }
+                        },
+                        color: true,
+                        size: true,
+                    }
+                },
+                shipping: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phoneNumber: true
+                    }
+                }
+            },
         });
         if (!order) throw new NotFoundException('Order not found');
         if (userId && order.userId !== userId) throw new NotFoundException('Order not found');
@@ -171,7 +207,21 @@ export class OrdersService {
 
     async getAllOrders() {
         return this.prisma.order.findMany({
-            include: { items: true, shipping: true, user: true },
+            include: {
+                items: {
+                    include: {
+                        product: {
+                            include: {
+                                product_image: true,
+                            }
+                        },
+                        color: true,
+                        size: true,
+                    }
+                },
+                shipping: true,
+                user: true
+            },
             orderBy: { createdAt: 'desc' },
         });
     }
