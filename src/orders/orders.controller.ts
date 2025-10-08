@@ -3,6 +3,7 @@ import { OrdersService } from './orders.service';
 import { CheckoutDto } from './dto/checkout.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdateShippingDto } from './dto/update-shipping.dto';
+import { UpdateOrderItemDto } from './dto/update-order-item.dto';
 // import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('orders')
@@ -53,6 +54,18 @@ export class OrdersController {
     ) {
         return this.ordersService.updateShippingAddress(
             Number(shippingId),
+            dto
+        );
+    }
+
+    // @UseGuards(JwtAuthGuard)
+    @Put('items/:itemId/quantity')
+    async updateOrderItemQuantity(
+        @Param('itemId') itemId: number,
+        @Body() dto: UpdateOrderItemDto
+    ) {
+        return this.ordersService.updateOrderItemQuantity(
+            Number(itemId),
             dto
         );
     }

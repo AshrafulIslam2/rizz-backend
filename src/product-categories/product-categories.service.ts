@@ -23,6 +23,11 @@ export class ProductCategoriesService {
             include: {
                 product: {
                     include: {
+                        product_colors: {
+                            include: {
+                                color: true,
+                            },
+                        },
                         product_image: {
                             select: {
                                 id: true,
@@ -63,7 +68,7 @@ export class ProductCategoriesService {
                                 category: true,
                             },
                         },
-                    }
+                    },
                 },
             },
             orderBy: {

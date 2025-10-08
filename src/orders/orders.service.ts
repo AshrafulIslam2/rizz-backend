@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CheckoutDto } from './dto/checkout.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdateShippingDto } from './dto/update-shipping.dto';
+import { UpdateOrderItemDto } from './dto/update-order-item.dto';
 import { Prisma, $Enums } from '@prisma/client';
 
 @Injectable()
@@ -292,6 +293,108 @@ export class OrdersService {
             }
 
             return updatedShipping;
+        });
+    }
+
+    /**
+     * Update order item quantity and recalculate order total
+     */
+    async updateOrderItemQuantity(itemId: number, dto: UpdateOrderItemDto) {
+        return this.prisma.$transaction(async (tx) => {
+            // Get the order item with product details
+            const orderItem = await tx.order_item.findUnique({
+                where: { id: itemId },
+                include: {
+                    order: true,
+                    product: true,
+                }
+            });
+
+            if (!orderItem) {
+                throw new NotFoundException('Order item not found');
+            }
+
+            // Check if order can be modified (only pending or processing orders)
+            if (!['PENDING', 'PROCESSING'].includes(orderItem.order.status)) {
+                throw new BadRequestException(
+                    `Cannot modify items in ${orderItem.order.status} orders`
+                );
+            }
+
+            // Calculate quantity difference
+            const quantityDifference = dto.quantity - orderItem.quantity;
+
+            // Check product stock availability
+            const productQuantity = await tx.product_quantity.findFirst({
+                where: {
+                    productId: orderItem.productId,
+                    colorId: orderItem.colorId,
+                    sizeId: orderItem.sizeId,
+                },
+            });
+
+            if (!productQuantity) {
+                throw new NotFoundException('Product variant not found');
+            }
+
+            // If increasing quantity, check if enough stock
+            if (quantityDifference > 0 && productQuantity.available_quantity < quantityDifference) {
+                throw new BadRequestException(
+                    `Insufficient stock. Only ${productQuantity.available_quantity} items available`
+                );
+            }
+
+            // Update product stock
+            await tx.product_quantity.update({
+                where: { id: productQuantity.id },
+                data: {
+                    available_quantity: {
+                        decrement: quantityDifference, // Will be negative if reducing, positive if increasing
+                    },
+                },
+            });
+
+            // Update order item quantity
+            const updatedItem = await tx.order_item.update({
+                where: { id: itemId },
+                data: { quantity: dto.quantity },
+            });
+
+            // Recalculate order total
+            // Get all items for this order
+            const allOrderItems = await tx.order_item.findMany({
+                where: { orderId: orderItem.orderId },
+            });
+
+            // Calculate new subtotal (sum of all item prices * quantities)
+            const subtotal = allOrderItems.reduce((sum, item) => {
+                const itemQuantity = item.id === itemId ? dto.quantity : item.quantity;
+                return sum + (item.price * itemQuantity);
+            }, 0);
+
+            // Get current delivery charge
+            const order = orderItem.order;
+            const newTotal = subtotal + order.deliveryCharge;
+
+            // Update order total
+            await tx.order.update({
+                where: { id: orderItem.orderId },
+                data: { total: newTotal },
+            });
+
+            // Return updated item with full details
+            return tx.order_item.findUnique({
+                where: { id: itemId },
+                include: {
+                    product: {
+                        include: {
+                            product_image: true,
+                        },
+                    },
+                    color: true,
+                    size: true,
+                },
+            });
         });
     }
 }
