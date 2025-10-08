@@ -445,3 +445,15 @@ model order_shipping {
 
   @@map("order_shipping")
 }
+
+// Delivery Area for shipment settings
+model DeliveryArea {
+  id        Int      @id @default(autoincrement())
+  areaName  String   @unique
+  charge    Float
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("delivery_areas")
+}

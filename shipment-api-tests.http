@@ -1,0 +1,113 @@
+### Shipment Settings API Tests
+
+### 1. Get All Delivery Areas
+GET http://localhost:3008/shipment/delivery-areas
+
+###
+
+### 2. Get Active Delivery Areas Only
+GET http://localhost:3008/shipment/delivery-areas/active
+
+###
+
+### 3. Get Specific Delivery Area
+GET http://localhost:3008/shipment/delivery-areas/1
+
+###
+
+### 4. Create New Delivery Area - Inside Chittagong
+POST http://localhost:3008/shipment/delivery-areas
+Content-Type: application/json
+
+{
+  "areaName": "Inside Chittagong",
+  "charge": 60
+}
+
+###
+
+### 5. Create New Delivery Area - Outside Chittagong
+POST http://localhost:3008/shipment/delivery-areas
+Content-Type: application/json
+
+{
+  "areaName": "Outside Chittagong",
+  "charge": 100
+}
+
+###
+
+### 6. Create New Delivery Area - Inside Dhaka
+POST http://localhost:3008/shipment/delivery-areas
+Content-Type: application/json
+
+{
+  "areaName": "Inside Dhaka",
+  "charge": 80
+}
+
+###
+
+### 7. Create New Delivery Area - Outside Dhaka
+POST http://localhost:3008/shipment/delivery-areas
+Content-Type: application/json
+
+{
+  "areaName": "Outside Dhaka",
+  "charge": 150
+}
+
+###
+
+### 8. Update Delivery Area (Change Name and Charge)
+PUT http://localhost:3008/shipment/delivery-areas/1
+Content-Type: application/json
+
+{
+  "areaName": "Inside Chittagong City",
+  "charge": 70
+}
+
+###
+
+### 9. Update Delivery Area (Change Charge Only)
+PUT http://localhost:3008/shipment/delivery-areas/2
+Content-Type: application/json
+
+{
+  "charge": 110
+}
+
+###
+
+### 10. Toggle Delivery Area Status (Active/Inactive)
+PATCH http://localhost:3008/shipment/delivery-areas/1/toggle
+
+###
+
+### 11. Delete Delivery Area
+DELETE http://localhost:3008/shipment/delivery-areas/4
+
+###
+
+### 12. Test Duplicate Area Name (Should Fail)
+POST http://localhost:3008/shipment/delivery-areas
+Content-Type: application/json
+
+{
+  "areaName": "Inside Dhaka",
+  "charge": 85
+}
+
+###
+
+### 13. Test Invalid Charge (Should Fail)
+POST http://localhost:3008/shipment/delivery-areas
+Content-Type: application/json
+
+{
+  "areaName": "Test Area",
+  "charge": -50
+}
+
+###
