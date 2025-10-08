@@ -39,6 +39,25 @@ export class ProductsController {
         });
     }
 
+    @Get('schema')
+    async getProductsForSchema() {
+        const products = await this.productsService.findAll(); // ডাটাবেস থেকে সব প্রোডাক্ট
+        return products.map(product => ({
+            "@type": "Offer",
+            itemOffered: {
+                "@type": "Product",
+                name: product.title,
+                price: product.basePrice?.toFixed(2) ?? (product.discountedPrice != null ? product.discountedPrice.toFixed(2) : null),
+                priceCurrency: "BDT",
+                availability: product.published ? "InStock" : "OutOfStock",
+                category: product.product_categories.map(cat => cat.category.name).join(", "),
+                image: product.product_image.map(img => img.url),  // Assuming product_images is an array of image objects
+                url: `https://rizzleather.com/products/${product.sku}`,
+                description: product.description,
+            },
+        }));
+    }
+
     @Get('published')
     findPublished() {
         return this.productsService.findPublished();
